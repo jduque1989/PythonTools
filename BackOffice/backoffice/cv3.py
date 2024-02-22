@@ -81,9 +81,10 @@ def print_specific_table_data(driver):
             pass  # or print("Empty data for:", header)
 
 
-def take_screenshot(driver, file_path="screenshot.png"):
+def take_screenshot(driver, code, file_path=".png"):
     driver.set_window_size(720, 1568)
-    time.sleep(1)  # Consider using WebDriverWait here instead of time.sleep
+    time.sleep(1) # Consider using WebDriverWait here instead of time.sleep
+    file_path = code + file_path
     driver.save_screenshot(file_path)
     print(f"Screenshot saved to {file_path}")
     subprocess.run(["open", file_path])
@@ -165,7 +166,7 @@ def main():
         print("CVS: ", cvs)
         print("-" * 70)
         fetch_and_calculate_total_sum(driver)
-        take_screenshot(driver)
+        take_screenshot(driver, username)
 
 
 if __name__ == "__main__":
