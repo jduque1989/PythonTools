@@ -18,6 +18,7 @@ def initialize_driver():
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
+    options.add_argument("--incognito")
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
@@ -52,40 +53,41 @@ def wait_for_element(driver, by, identifier):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((by, identifier)))
 
 
-def print_specific_table_data(driver):
-    # Ensure the table is present
-    custom_headers = [
-        "Ciclo",
-        "Periodo",
-        "PV del Ciclo",
-        "Rango Estimado",
-        "Inscritos Total"
-    ]
+# def print_specific_table_data(driver):
+#     # Ensure the table is present
+#     custom_headers = [
+#         "Ciclo",
+#         "Periodo",
+#         "PV del Ciclo",
+#         "Rango Estimado",
+#         "Inscritos Total"
+#     ]
 
-    # Wait for the table to be present to ensure it's fully loaded
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.w3-hoverable")))
+#     # Wait for the table to be present to ensure it's fully loaded
+#     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.w3-hoverable")))
 
-    # Find all the rows in the specific table body
-    rows = driver.find_elements(By.XPATH, "//table[@class='w3-hoverable w3-table-all responsive']/tbody/tr")
-    count = 0
-    for row in rows:
-        # Extract the data cell text
-        data = row.find_element(By.TAG_NAME, "td").text
-        # Check if the data cell is not empty before printing
-        if data.strip() and count < len(custom_headers):
-            # .strip() removes any leading/trailing whitespace
-            header = custom_headers[count]  # Extract the header text
-            print(f"{header}: {data}")
-            count += 1
-        else:
-            # Optionally, you can print a message indicating an empty row, or simply pass
-            pass  # or print("Empty data for:", header)
+#     # Find all the rows in the specific table body
+#     rows = driver.find_elements(By.XPATH, "//table[@class='w3-hoverable w3-table-all responsive']/tbody/tr")
+#     count = 0
+#     for row in rows:
+#         # Extract the data cell text
+#         data = row.find_element(By.TAG_NAME, "td").text
+#         # Check if the data cell is not empty before printing
+#         if data.strip() and count < len(custom_headers):
+#             # .strip() removes any leading/trailing whitespace
+#             header = custom_headers[count]  # Extract the header text
+#             print(f"{header}: {data}")
+#             count += 1
+#         else:
+#             # Optionally, you can print a message indicating an empty row, or simply pass
+#             pass  # or print("Empty data for:", header)
 
 
-def take_screenshot(driver, code, file_path_end=".png"):
+def take_screenshot(driver, name, file_path_end=".png"):
     driver.set_window_size(720, 1568)
     time.sleep(1)  # Consider using WebDriverWait here instead of time.sleep
-    file_path = code + file_path_end
+    file_path = name + file_path_end
+    print(file_path)
     driver.save_screenshot(file_path)
     print(f"Screenshot saved to {file_path}")
     subprocess.run(["open", file_path])
@@ -163,6 +165,7 @@ def loop_cv(driver):
     IDs, Names = read_csv_and_extract_columns()
     for i in range(0, len(IDs)):
         ids1 = str(IDs[i])
+        name = str(Names[i])
         print(ids1)
         team_cvs(driver, ids1)
         print(Names[i])
@@ -170,7 +173,8 @@ def loop_cv(driver):
         click_element(driver, By.XPATH, f"//div[contains(@class, 'ng-binding') and contains(text(), '{ids1}')]")
         click_element(driver, By.XPATH, "//button[contains(@class, 'GE_ItemBtn_FullWidth') and contains(text(), 'Resumen del Ciclo Actual')]")
         fetch_and_calculate_total_sum(driver)
-        take_screenshot(driver, ids1)
+        print(name)
+        take_screenshot(driver, name)
         navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
         click_element(driver, By.ID, "demo01")
         click_element(driver, By.ID, "optionpanelbtn")
