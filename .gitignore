@@ -1,5 +1,6 @@
 .env
 .env/*
+*.txt
 *.png
 __pycache__/
 .pytest_cache/
