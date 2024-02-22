@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import glob
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -53,43 +54,32 @@ def wait_for_element(driver, by, identifier):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((by, identifier)))
 
 
-# def print_specific_table_data(driver):
-#     # Ensure the table is present
-#     custom_headers = [
-#         "Ciclo",
-#         "Periodo",
-#         "PV del Ciclo",
-#         "Rango Estimado",
-#         "Inscritos Total"
-#     ]
-
-#     # Wait for the table to be present to ensure it's fully loaded
-#     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.w3-hoverable")))
-
-#     # Find all the rows in the specific table body
-#     rows = driver.find_elements(By.XPATH, "//table[@class='w3-hoverable w3-table-all responsive']/tbody/tr")
-#     count = 0
-#     for row in rows:
-#         # Extract the data cell text
-#         data = row.find_element(By.TAG_NAME, "td").text
-#         # Check if the data cell is not empty before printing
-#         if data.strip() and count < len(custom_headers):
-#             # .strip() removes any leading/trailing whitespace
-#             header = custom_headers[count]  # Extract the header text
-#             print(f"{header}: {data}")
-#             count += 1
-#         else:
-#             # Optionally, you can print a message indicating an empty row, or simply pass
-#             pass  # or print("Empty data for:", header)
-
-
 def take_screenshot(driver, code, file_path_end=".png"):
     driver.set_window_size(720, 1568)
     time.sleep(1)  # Consider using WebDriverWait here instead of time.sleep
-    file_path = code + file_path_end
+    file_path = "screenshot/" + code + file_path_end
     driver.save_screenshot(file_path)
     print(f"Screenshot saved to {file_path}")
     subprocess.run(["open", file_path])
+
+
+def delete_image():
+    # Specify the directory to search for .png files, '.' for current directory
+    directory = "screenshot/"
+
+    # Build the pattern to match .png files
+    pattern = os.path.join(directory, '*.png')
+
+    # Find all .png files in the specified directory
+    png_files = glob.glob(pattern)
+
+    # Iterate over the list of .png files and delete each one
+    for file_path in png_files:
+        try:
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
+        except OSError as e:
+            print(f"Error: {file_path} : {e.strerror}")
 
 
 def fetch_and_calculate_total_sum(driver):
@@ -189,6 +179,7 @@ def main():
             navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
             click_element(driver, By.ID, "demo01")
             click_element(driver, By.ID, "optionpanelbtn")
+            delete_image()
             loop_cv(driver)
     except TimeoutException:
         print("We've found a connection problem, please try again. The operation timed out.")
@@ -197,7 +188,6 @@ def main():
             print("We've found a connection problem, please try again.")
         else:
             raise  # Re-raise exception if it's not a known connection error
-
 
 
 if __name__ == "__main__":
