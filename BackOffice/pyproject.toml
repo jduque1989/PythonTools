@@ -6,7 +6,7 @@ authors = ["Juan David Duque <jduque0289@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 selenium = "^4.17.2"
 webdriver-manager = "^4.0.1"
 requests = "^2.31.0"
