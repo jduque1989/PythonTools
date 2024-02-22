@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 import subprocess
 import time
 from bs4 import BeautifulSoup
@@ -17,6 +17,7 @@ import pandas as pd
 def initialize_driver():
     options = Options()
     options.add_argument("--headless")
+    options.add_argument("--incognito")
     options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
@@ -52,34 +53,34 @@ def wait_for_element(driver, by, identifier):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((by, identifier)))
 
 
-def print_specific_table_data(driver):
-    # Ensure the table is present
-    custom_headers = [
-        "Ciclo",
-        "Periodo",
-        "PV del Ciclo",
-        "Rango Estimado",
-        "Inscritos Total"
-    ]
+# def print_specific_table_data(driver):
+#     # Ensure the table is present
+#     custom_headers = [
+#         "Ciclo",
+#         "Periodo",
+#         "PV del Ciclo",
+#         "Rango Estimado",
+#         "Inscritos Total"
+#     ]
 
-    # Wait for the table to be present to ensure it's fully loaded
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.w3-hoverable")))
+#     # Wait for the table to be present to ensure it's fully loaded
+#     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.w3-hoverable")))
 
-    # Find all the rows in the specific table body
-    rows = driver.find_elements(By.XPATH, "//table[@class='w3-hoverable w3-table-all responsive']/tbody/tr")
-    count = 0
-    for row in rows:
-        # Extract the data cell text
-        data = row.find_element(By.TAG_NAME, "td").text
-        # Check if the data cell is not empty before printing
-        if data.strip() and count < len(custom_headers):
-            # .strip() removes any leading/trailing whitespace
-            header = custom_headers[count]  # Extract the header text
-            print(f"{header}: {data}")
-            count += 1
-        else:
-            # Optionally, you can print a message indicating an empty row, or simply pass
-            pass  # or print("Empty data for:", header)
+#     # Find all the rows in the specific table body
+#     rows = driver.find_elements(By.XPATH, "//table[@class='w3-hoverable w3-table-all responsive']/tbody/tr")
+#     count = 0
+#     for row in rows:
+#         # Extract the data cell text
+#         data = row.find_element(By.TAG_NAME, "td").text
+#         # Check if the data cell is not empty before printing
+#         if data.strip() and count < len(custom_headers):
+#             # .strip() removes any leading/trailing whitespace
+#             header = custom_headers[count]  # Extract the header text
+#             print(f"{header}: {data}")
+#             count += 1
+#         else:
+#             # Optionally, you can print a message indicating an empty row, or simply pass
+#             pass  # or print("Empty data for:", header)
 
 
 def take_screenshot(driver, code, file_path_end=".png"):
@@ -164,9 +165,9 @@ def loop_cv(driver):
     for i in range(0, len(IDs)):
         ids1 = str(IDs[i])
         name = str(Names[i])
-        print(ids1)
+        print()
+        print(ids1, name)
         team_cvs(driver, ids1)
-        print(Names[i])
         click_element(driver, By.XPATH, "//button[contains(@class, 'confirm')]")
         click_element(driver, By.XPATH, f"//div[contains(@class, 'ng-binding') and contains(text(), '{ids1}')]")
         click_element(driver, By.XPATH, "//button[contains(@class, 'GE_ItemBtn_FullWidth') and contains(text(), 'Resumen del Ciclo Actual')]")
@@ -178,27 +179,25 @@ def loop_cv(driver):
 
 
 def main():
-    with initialize_driver() as driver:
-        load_dotenv('.env')
-        username = os.getenv('USERNAME')
-        password = os.getenv('PASSWORD')
-        login(driver, "https://colombia.ganoexcel.com/Home.aspx", username, password)
-        # # Follow through the workflow, replacing specific calls with the more generic ones.
-        navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
-        click_element(driver, By.ID, "demo01")
-        click_element(driver, By.ID, "optionpanelbtn")
-        loop_cv(driver)
-        # IDs, Names = read_csv_and_extract_columns()
-        # print(len(IDs))
-        # ids1 = str(IDs[1])
-        # print(IDs[0], Names[0])
-        # team_cvs(driver, ids1)
-        # click_element(driver, By.XPATH, "//button[contains(@class, 'confirm')]")
-        # click_element(driver, By.XPATH, f"//div[contains(@class, 'ng-binding') and contains(text(), '{ids1}')]")
-        # click_element(driver, By.XPATH, "//button[contains(@class, 'GE_ItemBtn_FullWidth') and contains(text(), 'Resumen del Ciclo Actual')]")
-        # take_screenshot(driver, ids1)
-        # # print_specific_table_data(driver)
-        # fetch_and_calculate_total_sum(driver)
+    try:
+        with initialize_driver() as driver:
+            load_dotenv('.env')
+            username = os.getenv('USERNAME')
+            password = os.getenv('PASSWORD')
+            login(driver, "https://colombia.ganoexcel.com/Home.aspx", username, password)
+            #  Follow through the workflow, replacing specific calls with the more generic ones.
+            navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
+            click_element(driver, By.ID, "demo01")
+            click_element(driver, By.ID, "optionpanelbtn")
+            loop_cv(driver)
+    except TimeoutException:
+        print("We've found a connection problem, please try again. The operation timed out.")
+    except WebDriverException as e:
+        if "ERR_INTERNET_DISCONNECTED" in str(e) or "ERR_CONNECTION_TIMED_OUT" in str(e):
+            print("We've found a connection problem, please try again.")
+        else:
+            raise  # Re-raise exception if it's not a known connection error
+
 
 
 if __name__ == "__main__":
