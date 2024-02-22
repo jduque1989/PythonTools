@@ -1,272 +1,50 @@
 
---boundary_.oOo._jlnJ5oXJIISB4Vg2iPQPy+3PfdTiJ7JX
-Content-Length: 12098
-Content-Type: application/octet-stream
-X-File-MD5: 02e2b3cbe9e5d8a47fc4943f72bd0aeb
-X-File-Mtime: 1707719821
-X-File-Path: /DiamondsBucket/CODING/Python-tools/BackOffice/.venv/lib/python3.11/site-packages/dotenv/main.py
+# Python Automation Scripts
 
-import io
-import logging
-import os
-import pathlib
-import shutil
-import sys
-import tempfile
-from collections import OrderedDict
-from contextlib import contextmanager
-from typing import (IO, Dict, Iterable, Iterator, Mapping, Optional, Tuple,
-                    Union)
+This repository contains two Python scripts designed to automate web browser interactions using Selenium. These scripts are intended for users looking to automate web tasks such as form submissions, data extraction, and web navigation.
 
-from .parser import Binding, parse_stream
-from .variables import parse_variables
+## Scripts Overview
 
-# A type alias for a string path to be used for the paths in this file.
-# These paths may flow to `open()` and `shutil.move()`; `shutil.move()`
-# only accepts string paths, not byte paths or file descriptors. See
-# https://github.com/python/typeshed/pull/6832.
-StrPath = Union[str, 'os.PathLike[str]']
+- **commissions.py**: Automates specific web interactions related to commissioning processes. It utilizes Selenium WebDriver for browser automation, handling form submissions, and navigating through web pages.
+- **cv3.py**: Aims at automating tasks for CV (Curriculum Vitae) submissions or data extraction from web sources. It includes functionalities for handling timeouts, extracting data using BeautifulSoup, and managing web sessions.
 
-logger = logging.getLogger(__name__)
+## Dependencies
 
+To run these scripts, you will need Python installed on your system along with the following packages:
 
-def with_warn_for_invalid_lines(mappings: Iterator[Binding]) -> Iterator[Binding]:
-    for mapping in mappings:
-        if mapping.error:
-            logger.warning(
-                "Python-dotenv could not parse statement starting at line %s",
-                mapping.original.line,
-            )
-        yield mapping
+- `selenium` for web automation
+- `python-dotenv` for environment variable management
+- `webdriver_manager` for managing browser driver dependencies
+- `beautifulsoup4` for parsing HTML and XML documents (required for `cv3.py`)
 
+You can install these dependencies by running:
 
-class DotEnv:
-    def __init__(
-        self,
-        dotenv_path: Optional[StrPath],
-        stream: Optional[IO[str]] = None,
-        verbose: bool = False,
-        encoding: Optional[str] = None,
-        interpolate: bool = True,
-        override: bool = True,
-    ) -> None:
-        self.dotenv_path: Optional[StrPath] = dotenv_path
-        self.stream: Optional[IO[str]] = stream
-        self._dict: Optional[Dict[str, Optional[str]]] = None
-        self.verbose: bool = verbose
-        self.encoding: Optional[str] = encoding
-        self.interpolate: bool = interpolate
-        self.override: bool = override
+```
+pip install selenium python-dotenv webdriver-manager beautifulsoup4
+```
 
-    @contextmanager
-    def _get_stream(self) -> Iterator[IO[str]]:
-        if self.dotenv_path and os.path.isfile(self.dotenv_path):
-            with open(self.dotenv_path, encoding=self.encoding) as stream:
-                yield stream
-        elif self.stream is not None:
-            yield self.stream
-        else:
-            if self.verbose:
-                logger.info(
-                    "Python-dotenv could not find configuration file %s.",
-                    self.dotenv_path or '.env',
-                )
-            yield io.StringIO('')
+## Setup
 
-    def dict(self) -> Dict[str, Optional[str]]:
-        """Return dotenv as dict"""
-        if self._dict:
-            return self._dict
+1. Clone this repository to your local machine.
+2. Create a `.env` file in the root directory of the project to store your environment variables (e.g., login credentials, API keys) securely.
+3. Ensure you have Chrome or any compatible browser installed along with its corresponding WebDriver.
 
-        raw_values = self.parse()
+## Running the Scripts
 
-        if self.interpolate:
-            self._dict = OrderedDict(resolve_variables(raw_values, override=self.override))
-        else:
-            self._dict = OrderedDict(raw_values)
+To run the scripts, navigate to the project directory in your terminal and execute:
 
-        return self._dict
+For `commissions.py`:
+```
+python commissions.py
+```
 
-    def parse(self) -> Iterator[Tuple[str, Optional[str]]]:
-        with self._get_stream() as stream:
-            for mapping in with_warn_for_invalid_lines(parse_stream(stream)):
-                if mapping.key is not None:
-                    yield mapping.key, mapping.value
+For `cv3.py`:
+```
+python cv3.py
+```
 
-    def set_as_environment_variables(self) -> bool:
-        """
-        Load the current dotenv as system environment variable.
-        """
-        if not self.dict():
-            return False
+Make sure to customize any specific variables or parameters within the scripts to fit your use case.
 
-        for k, v in self.dict().items():
-            if k in os.environ and not self.override:
-                continue
-            if v is not None:
-                os.environ[k] = v
+## Contribution
 
-        return True
-
-    def get(self, key: str) -> Optional[str]:
-        """
-        """
-        data = self.dict()
-
-        if key in data:
-            return data[key]
-
-        if self.verbose:
-            logger.warning("Key %s not found in %s.", key, self.dotenv_path)
-
-        return None
-
-
-def get_key(
-    dotenv_path: StrPath,
-    key_to_get: str,
-    encoding: Optional[str] = "utf-8",
-) -> Optional[str]:
-    """
-    Get the value of a given key from the given .env.
-
-    Returns `None` if the key isn't found or doesn't have a value.
-    """
-    return DotEnv(dotenv_path, verbose=True, encoding=encoding).get(key_to_get)
-
-
-@contextmanager
-def rewrite(
-    path: StrPath,
-    encoding: Optional[str],
-) -> Iterator[Tuple[IO[str], IO[str]]]:
-    pathlib.Path(path).touch()
-
-    with tempfile.NamedTemporaryFile(mode="w", encoding=encoding, delete=False) as dest:
-        error = None
-        try:
-            with open(path, encoding=encoding) as source:
-                yield (source, dest)
-        except BaseException as err:
-            error = err
-
-    if error is None:
-        shutil.move(dest.name, path)
-    else:
-        os.unlink(dest.name)
-        raise error from None
-
-
-def set_key(
-    dotenv_path: StrPath,
-    key_to_set: str,
-    value_to_set: str,
-    quote_mode: str = "always",
-    export: bool = False,
-    encoding: Optional[str] = "utf-8",
-) -> Tuple[Optional[bool], str, str]:
-    """
-    Adds or Updates a key/value to the given .env
-
-    If the .env path given doesn't exist, fails instead of risking creating
-    an orphan .env somewhere in the filesystem
-    """
-    if quote_mode not in ("always", "auto", "never"):
-        raise ValueError(f"Unknown quote_mode: {quote_mode}")
-
-    quote = (
-        quote_mode == "always"
-        or (quote_mode == "auto" and not value_to_set.isalnum())
-    )
-
-    if quote:
-        value_out = "'{}'".format(value_to_set.replace("'", "\\'"))
-    else:
-        value_out = value_to_set
-    if export:
-        line_out = f'export {key_to_set}={value_out}\n'
-    else:
-        line_out = f"{key_to_set}={value_out}\n"
-
-    with rewrite(dotenv_path, encoding=encoding) as (source, dest):
-        replaced = False
-        missing_newline = False
-        for mapping in with_warn_for_invalid_lines(parse_stream(source)):
-            if mapping.key == key_to_set:
-                dest.write(line_out)
-                replaced = True
-            else:
-                dest.write(mapping.original.string)
-                missing_newline = not mapping.original.string.endswith("\n")
-        if not replaced:
-            if missing_newline:
-                dest.write("\n")
-            dest.write(line_out)
-
-    return True, key_to_set, value_to_set
-
-
-def unset_key(
-    dotenv_path: StrPath,
-    key_to_unset: str,
-    quote_mode: str = "always",
-    encoding: Optional[str] = "utf-8",
-) -> Tuple[Optional[bool], str]:
-    """
-    Removes a given key from the given `.env` file.
-
-    If the .env path given doesn't exist, fails.
-    If the given key doesn't exist in the .env, fails.
-    """
-    if not os.path.exists(dotenv_path):
-        logger.warning("Can't delete from %s - it doesn't exist.", dotenv_path)
-        return None, key_to_unset
-
-    removed = False
-    with rewrite(dotenv_path, encoding=encoding) as (source, dest):
-        for mapping in with_warn_for_invalid_lines(parse_stream(source)):
-            if mapping.key == key_to_unset:
-                removed = True
-            else:
-                dest.write(mapping.original.string)
-
-    if not removed:
-        logger.warning("Key %s not removed from %s - key doesn't exist.", key_to_unset, dotenv_path)
-        return None, key_to_unset
-
-    return removed, key_to_unset
-
-
-def resolve_variables(
-    values: Iterable[Tuple[str, Optional[str]]],
-    override: bool,
-) -> Mapping[str, Optional[str]]:
-    new_values: Dict[str, Optional[str]] = {}
-
-    for (name, value) in values:
-        if value is None:
-            result = None
-        else:
-            atoms = parse_variables(value)
-            env: Dict[str, Optional[str]] = {}
-            if override:
-                env.update(os.environ)  # type: ignore
-                env.update(new_values)
-            else:
-                env.update(new_values)
-                env.update(os.environ)  # type: ignore
-            result = "".join(atom.resolve(env) for atom in atoms)
-
-        new_values[name] = result
-
-    return new_values
-
-
-def _walk_to_root(path: str) -> Iterator[str]:
-    """
-    Yield directories starting from the given directory up to the root
-    """
-    if not os.path.exists(path):
-        raise IOError('Starting path not found')
-
-    if os.pa
+Feel free to fork this repository and submit pull requests to contribute to the development of these automation scripts. Your contributions are highly appreciated!
