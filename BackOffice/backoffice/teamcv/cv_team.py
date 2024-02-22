@@ -16,8 +16,8 @@ import pandas as pd
 
 def initialize_driver():
     options = Options()
-    # options.add_argument("--headless")
-    # options.add_argument("--disable-gpu")
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
@@ -163,6 +163,7 @@ def loop_cv(driver):
     IDs, Names = read_csv_and_extract_columns()
     for i in range(0, len(IDs)):
         ids1 = str(IDs[i])
+        name = str(Names[i])
         print(ids1)
         team_cvs(driver, ids1)
         print(Names[i])
@@ -170,7 +171,7 @@ def loop_cv(driver):
         click_element(driver, By.XPATH, f"//div[contains(@class, 'ng-binding') and contains(text(), '{ids1}')]")
         click_element(driver, By.XPATH, "//button[contains(@class, 'GE_ItemBtn_FullWidth') and contains(text(), 'Resumen del Ciclo Actual')]")
         fetch_and_calculate_total_sum(driver)
-        take_screenshot(driver, ids1)
+        take_screenshot(driver, name)
         navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
         click_element(driver, By.ID, "demo01")
         click_element(driver, By.ID, "optionpanelbtn")
