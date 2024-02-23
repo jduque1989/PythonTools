@@ -11,12 +11,14 @@ from selenium.common.exceptions import TimeoutException
 import subprocess
 import time
 from bs4 import BeautifulSoup
+from datetime import datetime
+import pytz
 
 
 def initialize_driver():
     options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
+    # options.add_argument("--headless")
+    # options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
@@ -150,9 +152,24 @@ def fetch_and_calculate_total_sum(driver):
     print(f"{'Left Branch Sum:':<20}{left_sum:>10} | {'Right Branch Sum:':<20}{right_sum:>10}")
 
 
+def get_time(driver):
+    wait = WebDriverWait(driver, 10)  # Wait for up to 10 seconds
+    update_time_element = wait.until(EC.presence_of_element_located((By.XPATH, "//p[contains(@class, 'ng-binding') and contains(., 'Hora del Pacífico')]")))
+    update_time = update_time_element.text
+    date_time_str = update_time[1:].split(' (')[0]
+    format = '%m/%d/%Y %H:%M:%S'
+    date_time_obj = datetime.strptime(date_time_str, format)
+    print(date_time_obj, 'Hora Pacifico')
+    pst_zone = pytz.timezone('America/Los_Angeles')
+    cot_zone = pytz.timezone('America/Bogota')
+    localized_pst_time = pst_zone.localize(date_time_obj)
+    colombia_time = localized_pst_time.astimezone(cot_zone)
+    print(colombia_time, 'Hora Colombia')
+
+
 def main():
     with initialize_driver() as driver:
-        load_dotenv('.env')
+        load_dotenv('teamcv/.env')
         username = os.getenv('USERNAME')
         password = os.getenv('PASSWORD')
         login(driver, "https://colombia.ganoexcel.com/Home.aspx", username, password)
@@ -161,6 +178,7 @@ def main():
         navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
         click_element(driver, By.ID, "demo01")
         click_element(driver, By.XPATH, f"//div[contains(@class, 'ng-binding') and contains(text(), '{username}')]")
+        get_time(driver)
         click_element(driver, By.XPATH, "//button[contains(@class, 'GE_ItemBtn_FullWidth') and contains(text(), 'Resumen del Ciclo Actual')]")
         print_specific_table_data(driver)
         print("CVS: ", cvs)
