@@ -13,13 +13,14 @@ import subprocess
 import time
 from bs4 import BeautifulSoup
 import pandas as pd
+import argparse
 
 
 def initialize_driver():
     options = Options()
-    options.add_argument("--headless")
+    # options.add_argument("--headless")
     options.add_argument("--incognito")
-    options.add_argument("--disable-gpu")
+    # options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
@@ -138,8 +139,17 @@ def team_cvs(driver, code):
     search_button.click()
 
 
-def read_csv_and_extract_columns():
-    file_path = 'team_code.csv'  # Adjust the path as necessary
+# Parse command-line arguments
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Process a CSV file.')
+    parser.add_argument('csv_file', nargs='?', default='team_code.csv', help='The name of the CSV file to process (default: team_code.csv)')
+    args = parser.parse_args()
+    return args
+
+
+def read_csv_and_extract_columns(filename):
+    # Use args.csv to access the provided CSV filename or the default value
+    file_path = filename
     delimiter = ';'
     id_column_name = 'ID'  # Adjust if the actual name is different
     name_column_name = 'NOMBRE '
@@ -150,8 +160,9 @@ def read_csv_and_extract_columns():
     return IDs, Names
 
 
-def loop_cv(driver):
-    IDs, Names = read_csv_and_extract_columns()
+def loop_cv(driver, filename):
+    time.sleep(2)
+    IDs, Names = read_csv_and_extract_columns(filename)
     for i in range(0, len(IDs)):
         ids1 = str(IDs[i])
         name = str(Names[i])
@@ -175,12 +186,13 @@ def main():
             username = os.getenv('USERNAME')
             password = os.getenv('PASSWORD')
             login(driver, "https://colombia.ganoexcel.com/Home.aspx", username, password)
+            time.sleep(2)
             #  Follow through the workflow, replacing specific calls with the more generic ones.
             navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
             click_element(driver, By.ID, "demo01")
             click_element(driver, By.ID, "optionpanelbtn")
             delete_image()
-            loop_cv(driver)
+            loop_cv(driver, csv_filename)
     except TimeoutException:
         print("We've found a connection problem, please try again. The operation timed out.")
     except WebDriverException as e:
@@ -191,4 +203,6 @@ def main():
 
 
 if __name__ == "__main__":
+    args = parse_arguments()
+    csv_filename = args.csv_file
     main()
