@@ -193,6 +193,7 @@ def main():
             click_element(driver, By.ID, "optionpanelbtn")
             delete_image()
             loop_cv(driver, csv_filename)
+            driver.quit()
     except TimeoutException:
         print("We've found a connection problem, please try again. The operation timed out.")
     except WebDriverException as e:
