@@ -20,7 +20,9 @@ def initialize_driver():
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
-    return webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    return driver
+    # return webdriver.Chrome(service=service, options=options)
 
 
 def login(driver, url, username, password):
