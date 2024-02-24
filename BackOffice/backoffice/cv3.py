@@ -185,6 +185,7 @@ def main():
         print("-" * 70)
         fetch_and_calculate_total_sum(driver)
         take_screenshot(driver, username)
+        driver.quit()
 
 
 if __name__ == "__main__":
