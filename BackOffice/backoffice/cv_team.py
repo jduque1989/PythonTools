@@ -58,7 +58,7 @@ def wait_for_element(driver, by, identifier):
 def take_screenshot(driver, code, file_path_end=".png"):
     driver.set_window_size(720, 1568)
     time.sleep(1)  # Consider using WebDriverWait here instead of time.sleep
-    file_path = "screenshot/" + code + file_path_end
+    file_path = "teamcv/screenshot/" + code + file_path_end
     driver.save_screenshot(file_path)
     print(f"Screenshot saved to {file_path}")
     subprocess.run(["open", file_path])
@@ -66,7 +66,7 @@ def take_screenshot(driver, code, file_path_end=".png"):
 
 def delete_image():
     # Specify the directory to search for .png files, '.' for current directory
-    directory = "screenshot/"
+    directory = "teamcv/screenshot/"
 
     # Build the pattern to match .png files
     pattern = os.path.join(directory, '*.png')
@@ -142,7 +142,7 @@ def team_cvs(driver, code):
 # Parse command-line arguments
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process a CSV file.')
-    parser.add_argument('csv_file', nargs='?', default='team_code.csv', help='The name of the CSV file to process (default: team_code.csv)')
+    parser.add_argument('csv_file', nargs='?', default='team_code.csv', help='The name of the CSV file to process (default: ./teamcv/team_code.csv)')
     args = parser.parse_args()
     return args
 
@@ -182,7 +182,7 @@ def loop_cv(driver, filename):
 def main():
     try:
         with initialize_driver() as driver:
-            load_dotenv('.env')
+            load_dotenv('teamcv/.env')
             username = os.getenv('USERNAME')
             password = os.getenv('PASSWORD')
             login(driver, "https://colombia.ganoexcel.com/Home.aspx", username, password)
