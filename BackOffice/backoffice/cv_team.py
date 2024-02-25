@@ -55,18 +55,32 @@ def wait_for_element(driver, by, identifier):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((by, identifier)))
 
 
-def take_screenshot(driver, code, file_path_end=".png"):
+def take_screenshot(driver, path_to_create, code, file_path_end=".png"):
     driver.set_window_size(720, 1568)
     time.sleep(1)  # Consider using WebDriverWait here instead of time.sleep
-    file_path = "teamcv/screenshot/" + code + file_path_end
+    file_path = path_to_create + "/" + code + file_path_end
     driver.save_screenshot(file_path)
     print(f"Screenshot saved to {file_path}")
     subprocess.run(["open", file_path])
 
 
-def delete_image():
-    # Specify the directory to search for .png files, '.' for current directory
-    directory = "teamcv/screenshot/"
+def create_folder(filename):
+    # Extract folder name from filename
+    folder, _ = os.path.splitext(os.path.basename(filename))
+    parent_directory = "./teamcv"
+    path_to_create = os.path.join(parent_directory, folder)
+    # Check if the path already exists
+    if not os.path.exists(path_to_create):
+        # Create the folder using the full path
+        os.makedirs(path_to_create)
+        print(f"Folder created: {path_to_create}")
+    else:
+        print(f"Folder already exists: {path_to_create}")
+    return path_to_create
+
+
+def delete_image(path_to_create):
+    directory = path_to_create
 
     # Build the pattern to match .png files
     pattern = os.path.join(directory, '*.png')
@@ -160,7 +174,7 @@ def read_csv_and_extract_columns(filename):
     return IDs, Names
 
 
-def loop_cv(driver, filename):
+def loop_cv(driver, filename, path_to_create):
     time.sleep(2)
     IDs, Names = read_csv_and_extract_columns(filename)
     for i in range(0, len(IDs)):
@@ -173,7 +187,7 @@ def loop_cv(driver, filename):
         click_element(driver, By.XPATH, f"//div[contains(@class, 'ng-binding') and contains(text(), '{ids1}')]")
         click_element(driver, By.XPATH, "//button[contains(@class, 'GE_ItemBtn_FullWidth') and contains(text(), 'Resumen del Ciclo Actual')]")
         fetch_and_calculate_total_sum(driver)
-        take_screenshot(driver, name)
+        take_screenshot(driver, path_to_create, name)
         navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
         click_element(driver, By.ID, "demo01")
         click_element(driver, By.ID, "optionpanelbtn")
@@ -191,8 +205,9 @@ def main():
             navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
             click_element(driver, By.ID, "demo01")
             click_element(driver, By.ID, "optionpanelbtn")
-            delete_image()
-            loop_cv(driver, csv_filename)
+            path = create_folder(csv_filename)
+            delete_image(csv_filename)
+            loop_cv(driver, csv_filename, path)
             driver.quit()
     except TimeoutException:
         print("We've found a connection problem, please try again. The operation timed out.")
@@ -206,4 +221,5 @@ def main():
 if __name__ == "__main__":
     args = parse_arguments()
     csv_filename = args.csv_file
+    print(csv_filename)
     main()
