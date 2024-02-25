@@ -156,7 +156,7 @@ def team_cvs(driver, code):
 # Parse command-line arguments
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process a CSV file.')
-    parser.add_argument('csv_file', nargs='?', default='team_code.csv', help='The name of the CSV file to process (default: ./teamcv/team_code.csv)')
+    parser.add_argument('csv_file', nargs='?', default='./teamcv/team_code.csv', help='The name of the CSV file to process (default: ./teamcv/team_code.csv)')
     args = parser.parse_args()
     return args
 
