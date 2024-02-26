@@ -14,13 +14,14 @@ import time
 from bs4 import BeautifulSoup
 import pandas as pd
 import argparse
+from icecream import ic
 
 
 def initialize_driver():
     options = Options()
-    options.add_argument("--headless")
-    # options.add_argument("--incognito")
-    options.add_argument("--disable-gpu")
+    # options.add_argument("--headless")
+    options.add_argument("--incognito")
+    # options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
@@ -81,6 +82,8 @@ def create_folder(filename):
 
 def delete_image(path_to_create):
     directory = path_to_create
+    ic(directory)
+    print(f"Deleting files in directory: {directory}")
 
     # Build the pattern to match .png files
     pattern = os.path.join(directory, '*.png')
@@ -92,9 +95,9 @@ def delete_image(path_to_create):
     for file_path in png_files:
         try:
             os.remove(file_path)
-            print(f"Deleted: {file_path}")
+            ic(print(f"Deleted: {file_path}"))
         except OSError as e:
-            print(f"Error: {file_path} : {e.strerror}")
+            ic(print(f"Error: {file_path} : {e.strerror}"))
 
 
 def fetch_and_calculate_total_sum(driver):
@@ -199,14 +202,16 @@ def main():
             load_dotenv('teamcv/.env')
             username = os.getenv('USERNAME')
             password = os.getenv('PASSWORD')
-            login(driver, "https://colombia.ganoexcel.com/Home.aspx", username, password)
-            time.sleep(2)
+            login(driver, "https://colombia.ganoexcel.com/Downline.aspx", username, password)
             #  Follow through the workflow, replacing specific calls with the more generic ones.
-            navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
+            # navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
+            time.sleep(1)
             click_element(driver, By.ID, "demo01")
             click_element(driver, By.ID, "optionpanelbtn")
+            time.sleep(3)
+            click_element(driver, By.CLASS_NAME, "confirm")
             path = create_folder(csv_filename)
-            delete_image(csv_filename)
+            delete_image(path)
             loop_cv(driver, csv_filename, path)
             driver.quit()
     except TimeoutException:
