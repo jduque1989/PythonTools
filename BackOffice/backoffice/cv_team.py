@@ -28,6 +28,11 @@ def initialize_driver():
 
 def login(driver, url, username, password):
     driver.get(url)
+    logged_in_elements = driver.find_elements(By.ID, "logoutbtn")  # Adjust the ID as necessary
+    if len(logged_in_elements) > 0:
+        print("Already logged in.")
+        return
+    print("Logging in...")
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "myusername"))).send_keys(username)
     driver.find_element(By.ID, "mypassword").send_keys(password)
     driver.find_element(By.ID, "myloginbtn").click()
