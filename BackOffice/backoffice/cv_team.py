@@ -207,7 +207,7 @@ def main():
             # navigate_to(driver, "https://colombia.ganoexcel.com/Downline.aspx")
             click_element(driver, By.ID, "demo01")
             click_element(driver, By.ID, "optionpanelbtn")
-            time.sleep(1)
+            # time.sleep(1)
             click_element(driver, By.CLASS_NAME, "confirm")
             path = create_folder(csv_filename)
             delete_image(path)
