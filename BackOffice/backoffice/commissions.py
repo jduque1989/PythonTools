@@ -3,19 +3,21 @@ from dotenv import load_dotenv
 import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import TimeoutException
 import time
 
 
 def initialize_driver():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
+    # chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--incognito")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return driver
 
@@ -28,13 +30,27 @@ def login(driver, url, username, password):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "Label2")))
 
 
-def navigate_to_commissions(driver, url):
-    driver.get(url)
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "demo03"))).click()
+# def navigate_to_commissions(driver, url):
+#     driver.get(url)
+#     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "demo03"))).click()
+
 
 def select_country(driver, country_value="170"):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "commissioncountrydd")))
     Select(driver.find_element(By.ID, "commissioncountrydd")).select_by_value(country_value)
+
+
+def click_element(driver, by, identifier):
+    # Wait for the element to be present on the page
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((by, identifier)))
+    # Attempt to click the element using Selenium's click method
+    try:
+        element = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((by, identifier)))
+        element.click()
+    except TimeoutException:
+        # If the element is not clickable, fall back to JavaScript click
+        element = driver.find_element(by, identifier)
+        driver.execute_script("arguments[0].click();", element)
 
 
 def print_table_data(driver):
@@ -47,11 +63,11 @@ def print_table_data(driver):
 
 if __name__ == "__main__":
     driver = initialize_driver()
-    load_dotenv('.env')
+    load_dotenv('teamcv/.env')
     username = os.getenv('USERNAME')
     password = os.getenv('PASSWORD')
-    login(driver, "https://colombia.ganoexcel.com/Login.aspx?ReturnUrl=%2fOrdering.aspx", username, password)
-    navigate_to_commissions(driver, "https://colombia.ganoexcel.com/Commissions.aspx")
+    login(driver, "https://colombia.ganoexcel.com/Commissions.aspx", username, password)
+    click_element(driver, By.ID, "demo03")
     select_country(driver, "170")
     time.sleep(1)
     print_table_data(driver)
