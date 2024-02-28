@@ -19,9 +19,9 @@ from icecream import ic
 
 def initialize_driver():
     options = Options()
-    # options.add_argument("--headless")
+    options.add_argument("--headless")
     options.add_argument("--incognito")
-    # options.add_argument("--disable-gpu")
+    options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 

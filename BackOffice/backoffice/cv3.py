@@ -19,7 +19,7 @@ def initialize_driver():
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
-    service = Service(ChromeDriverManager().install())
+    chrome_options.add_argument("--incognito")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     return driver
     # return webdriver.Chrome(service=service, options=options)
