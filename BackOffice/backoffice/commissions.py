@@ -10,13 +10,14 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
+import csv
 import time
 
 
 def initialize_driver():
     chrome_options = Options()
-    # chrome_options.add_argument("--headless")
-    # chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--incognito")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return driver
@@ -54,11 +55,16 @@ def click_element(driver, by, identifier):
 
 
 def print_table_data(driver):
-    rows = driver.find_elements(By.XPATH, "//tbody[@id='datarow']/tr")
-    for row in rows:
-        cells = row.find_elements(By.TAG_NAME, "td")
-        row_data = [cell.text for cell in cells]
-        print(row_data)
+    csv_file_path = 'commission.csv'
+    with open(csv_file_path, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        rows = driver.find_elements(By.XPATH, "//tbody[@id='datarow']/tr")
+        for row in rows:
+            cells = row.find_elements(By.TAG_NAME, "td")
+            row_data = [cell.text for cell in cells]
+            writer.writerow(row_data)
+            print(row_data)
+    print(f"Data written to {csv_file_path}")
 
 
 if __name__ == "__main__":
