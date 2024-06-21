@@ -63,16 +63,20 @@ if days_until_next_friday == 0:
     days_until_next_friday = 7  # If today is Friday, set next Friday to 7 days ahead
 next_friday = datetime.now() + timedelta(days=days_until_next_friday)
 next_friday_formatted = next_friday.strftime("%Y-%m-%d")
-
+# monto_cop = float(monto_tag.replace("$", "")) * 3990
+monto_cop = float(monto_tag.replace("$", "").replace(",", "")) * 3990
+print(monto_cop)
 payload = {
     "numberTemplate": {"id": "23"},
     "client": {"id": 1},
+    "anotation": "*FAVOR NO EFECTUAR RETENCION EN LA FUENTE* Regimen simple de tributación.  Medio de pago por transferencia electrónica a la CUENTA DE AHORROS 28070119350 de BANCOLOMBIA, a NOMBRE DE GRUPO MERAKI.  Autorizo en caso de incumplimiento de esta obligación sea reportado a las centrales",
     "items": [
         {
+            "stamp": {"generateStamp": False},
             "id": 5,
             "name": "COMPENSACIÓN",
-            "price": price_tag,
-            "description": f"CICLO {ciclo_tag} - Fechas de corte: {fecha_tag}. MONTO DOLARES: ${monto_tag}",
+            "price": monto_cop,
+            "description": f"CICLO {ciclo_tag} - Fechas de corte: {fecha_tag}. MONTO DOLARES: {monto_tag}",
             "quantity": 1,
             "tax": [{"id": 3}]
         }

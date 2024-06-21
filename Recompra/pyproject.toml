@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "youtube"
+name = "recompra"
 version = "0.1.0"
 description = ""
 authors = ["jduque1989 <67889006+jduque1989@users.noreply.github.com>"]
@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-pytube = "^15.0.0"
+reflex = "^0.5.4"
 
 
 [build-system]
