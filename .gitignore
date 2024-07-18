@@ -15,3 +15,10 @@ build/
 *.csv
 *.mp3
 *.mp4
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.db
+*.log
+Dev/*

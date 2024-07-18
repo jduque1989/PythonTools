@@ -1,4 +1,3 @@
-
 from dotenv import load_dotenv
 import os
 from selenium import webdriver
@@ -58,12 +57,26 @@ def print_table_data(driver):
     csv_file_path = 'commission.csv'
     with open(csv_file_path, mode='w', newline='') as file:
         writer = csv.writer(file)
-        rows = driver.find_elements(By.XPATH, "//tbody[@id='datarow']/tr")
+        # Locate the table with id="commissionlisttbl"
+        table = driver.find_element(By.ID, "commissionlisttbl")
+        # Find all rows within the table body
+        rows = table.find_elements(By.XPATH, ".//tbody/tr")
         for row in rows:
             cells = row.find_elements(By.TAG_NAME, "td")
-            row_data = [cell.text for cell in cells]
-            writer.writerow(row_data)
-            print(row_data)
+            row_data = []
+            for cell in cells:
+                retry_count = 3
+                while retry_count > 0:
+                    try:
+                        row_data.append(cell.text.strip())  # Strip whitespace
+                        break
+                    except StaleElementReferenceException:
+                        retry_count -= 1
+                        cells = row.find_elements(By.TAG_NAME, "td")
+            # Filter out rows that are completely empty
+            if any(row_data):
+                writer.writerow(row_data)
+                print(row_data)
     print(f"Data written to {csv_file_path}")
 
 
@@ -74,6 +87,7 @@ if __name__ == "__main__":
     password = os.getenv('PASSWORD')
     login(driver, "https://colombia.ganoexcel.com/Commissions.aspx", username, password)
     click_element(driver, By.ID, "demo03")
+    time.sleep(1)
     select_country(driver, "170")
     time.sleep(1)
     print_table_data(driver)
